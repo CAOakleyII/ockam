@@ -1,6 +1,7 @@
 use minicbor::{Decode, Encode};
+use ockam_abac::ParseError;
 use ockam_core::CowStr;
-use std::fmt::{self, Display};
+use std::{fmt::{self, Display}, str::FromStr};
 
 #[cfg(feature = "tag")]
 use ockam_core::TypeTag;
@@ -34,6 +35,31 @@ impl<'a> CreateTransport<'a> {
     }
 }
 
+/// Request body when retrieving list of transports
+#[derive(Debug, Clone, Decode, Encode)]
+#[rustfmt::skip]
+#[cbor(map)]
+pub struct GetTransportList {
+    #[cfg(feature = "tag")]
+    #[n(0)] tag: TypeTag<3333333>,
+    #[b(1)] pub tts: Option<Vec<TransportType>>,
+    #[b(2)] pub tms: Option<Vec<TransportMode>>,
+}
+
+impl GetTransportList {
+    pub fn new(
+        tts:  Option<Vec<TransportType>>,
+        tms: Option<Vec<TransportMode>>,
+    ) -> Self {
+        Self {
+            #[cfg(feature = "tag")]
+            tag: TypeTag,
+            tts,
+            tms,
+        }
+    }
+}
+
 /// Request to delete a transport
 #[derive(Debug, Clone, Decode, Encode)]
 #[rustfmt::skip]
@@ -61,7 +87,7 @@ impl<'a> DeleteTransport<'a> {
 /// Encode which type of transport is being requested
 // TODO: we have a TransportType in ockam_core.  Do we really want to
 // mirror this kind of type here?
-#[derive(Copy, Clone, Debug, Decode, Encode)]
+#[derive(Copy, Clone, Debug, Decode, Encode, PartialEq, Eq)]
 #[rustfmt::skip]
 #[cbor(index_only)]
 pub enum TransportType {
@@ -83,6 +109,23 @@ impl Display for TransportType {
     }
 }
 
+impl FromStr for TransportType {
+    type Err = ockam_core::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_uppercase().as_str() {
+            "TCP" => Ok(TransportType::Tcp),
+            "BLE" => Ok(TransportType::Ble),
+            "WEBSOCKET" => Ok(TransportType::WebSocket),
+            "WS" => Ok(TransportType::WebSocket),
+            s => {
+                let error = ParseError::message(format!("'{}' is not a valid TransportType", s));
+                Err(ockam_core::Error::from(error))
+            }
+        }
+    }
+}
+
 /// Encode which type of transport is being requested
 #[derive(Copy, Clone, Debug, Decode, Encode, PartialEq, Eq)]
 #[rustfmt::skip]
@@ -99,6 +142,23 @@ impl Display for TransportMode {
             Self::Listen => "Listening",
             Self::Connect => "Remote connection",
         })
+    }
+}
+
+impl FromStr for TransportMode {
+    type Err = ockam_core::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_uppercase().as_str() {
+            "CONNECT" => Ok(TransportMode::Connect),
+            "REMOTE CONNECTION" => Ok(TransportMode::Connect),
+            "LISTEN" => Ok(TransportMode::Listen),
+            "LISTENING" => Ok(TransportMode::Listen),
+            s => {
+                let error = ParseError::message(format!("'{}' is not a valid TransportMode", s));
+                Err(ockam_core::Error::from(error))
+            }
+        }
     }
 }
 

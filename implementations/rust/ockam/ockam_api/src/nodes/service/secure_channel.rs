@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::time::Duration;
 
 use super::{map_multiaddr_err, NodeManagerWorker};
@@ -12,11 +13,12 @@ use crate::nodes::NodeManager;
 use crate::DefaultAddress;
 use minicbor::Decoder;
 use ockam::identity::TrustEveryonePolicy;
-use ockam::{Address, Result, Route};
+use ockam::{Address, Result, Route, Context};
 use ockam_core::api::{Request, Response, ResponseBuilder};
 use ockam_core::{route, AsyncTryClone};
 use ockam_identity::{Identity, IdentityIdentifier, TrustMultiIdentifiersPolicy};
 use ockam_multiaddr::MultiAddr;
+use ockam_node::tokio::sync::RwLockReadGuard;
 use ockam_vault::Vault;
 
 impl NodeManager {
@@ -299,7 +301,9 @@ impl NodeManagerWorker {
             .secure_channels
             .get_by_addr(&sc_address);
 
-        Ok(Response::ok(req.id()).body(ShowSecureChannelResponse::new(info)))
+        Ok(Response::ok(req.id()).body(ShowSecureChannelResponse::new(info, Cow::from(
+            format!("/node/{}", node_manager.node_name)
+        ))))
     }
 
     pub(super) async fn create_secure_channel_listener(

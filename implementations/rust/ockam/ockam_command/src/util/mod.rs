@@ -25,6 +25,7 @@ use crate::util::output::Output;
 use crate::{CommandGlobalOpts, OutputFormat};
 
 pub mod api;
+pub mod api_builder;
 pub mod exitcode;
 pub mod startup;
 

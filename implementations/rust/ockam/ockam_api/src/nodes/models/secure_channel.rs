@@ -6,7 +6,7 @@ use crate::nodes::registry::SecureChannelInfo;
 use ockam_core::compat::borrow::Cow;
 #[cfg(feature = "tag")]
 use ockam_core::TypeTag;
-use ockam_core::{route, Address, CowStr, Result};
+use ockam_core::{route, Address, CowStr, Result, TypeTag};
 use ockam_identity::IdentityIdentifier;
 use ockam_multiaddr::MultiAddr;
 use serde::Serialize;
@@ -174,11 +174,12 @@ pub struct ShowSecureChannelResponse<'a> {
     #[n(0)] tag: TypeTag<4566220>,
     #[b(1)] pub channel: Option<Cow<'a, str>>,
     #[b(2)] pub route: Option<Cow<'a, str>>,
-    #[b(4)] pub authorized_identifiers: Option<Vec<CowStr<'a>>>,
+    #[b(3)] pub authorized_identifiers: Option<Vec<CowStr<'a>>>,
+    #[b(4)] pub from: Cow<'a, str>,
 }
 
 impl<'a> ShowSecureChannelResponse<'a> {
-    pub fn new(info: Option<&SecureChannelInfo>) -> Self {
+    pub fn new(info: Option<&SecureChannelInfo>, from: Cow<'a, str>) -> Self {
         Self {
             #[cfg(feature = "tag")]
             tag: TypeTag,
@@ -190,6 +191,26 @@ impl<'a> ShowSecureChannelResponse<'a> {
                         .map(|ids| ids.iter().map(|iid| iid.to_string().into()).collect())
                 })
                 .unwrap_or(None),
+            from
+        }
+    }
+}
+
+#[derive(Debug, Clone, Decode, Encode)]
+#[rustfmt::skip]
+#[cbor(map)]
+pub struct SecureChannelList<'a> {
+    #[cfg(feature = "tag")]
+    #[n(0)] tag: TypeTag<1111111>,
+    #[b(1)] pub list: Vec<ShowSecureChannelResponse<'a>>
+}
+
+impl <'a> SecureChannelList<'a> {
+    pub fn new(list: Vec<ShowSecureChannelResponse<'a>>) -> Self {
+        Self {
+            #[cfg(feature = "tag")]
+            tag: TypeTag,
+            list,
         }
     }
 }

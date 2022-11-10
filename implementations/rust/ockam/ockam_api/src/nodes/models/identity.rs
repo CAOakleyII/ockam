@@ -66,3 +66,28 @@ impl<'a> ShortIdentityResponse<'a> {
         }
     }
 }
+
+#[derive(Debug, Clone, Decode, Encode, Serialize)]
+#[rustfmt::skip]
+#[cbor(map)]
+pub struct IdentityResponse<'a> {
+    #[cfg(feature = "tag")]
+    #[serde(skip)]
+    #[n(0)] tag: TypeTag<4444444>,
+    #[b(1)] short_identity: Option<ShortIdentityResponse<'a>>,
+    #[b(2)] long_identity: Option<LongIdentityResponse<'a>>,
+}
+
+impl<'a> IdentityResponse<'a> {
+    pub fn new(
+        short_identity: Option<ShortIdentityResponse<'a>>,
+        long_identity: Option<LongIdentityResponse<'a>>
+    ) -> Self {
+        Self {
+            #[cfg(feature = "tag")]
+            tag: TypeTag,
+            short_identity,
+            long_identity
+        }
+    }
+}

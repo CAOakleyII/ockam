@@ -9,6 +9,7 @@ mod credential;
 mod enroll;
 mod error;
 mod forwarder;
+mod get;
 mod help;
 mod identity;
 mod message;
@@ -35,6 +36,7 @@ use credential::CredentialCommand;
 use enroll::EnrollCommand;
 use error::{Error, Result};
 use forwarder::ForwarderCommand;
+use get::GetCommand;
 use identity::IdentityCommand;
 use message::MessageCommand;
 use node::NodeCommand;
@@ -295,6 +297,9 @@ pub enum OckamSubcommand {
     #[command(display_order = 821)]
     Policy(PolicyCommand),
 
+    #[command(display_order = 850)]
+    Get(GetCommand),
+
     #[command(display_order = 900)]
     Completion(CompletionCommand),
 
@@ -353,6 +358,7 @@ impl OckamCommand {
             OckamSubcommand::Configuration(c) => c.run(options),
             OckamSubcommand::Enroll(c) => c.run(options),
             OckamSubcommand::Forwarder(c) => c.run(options),
+            OckamSubcommand::Get(c) => c.run(options),
             OckamSubcommand::Message(c) => c.run(options),
             OckamSubcommand::Node(c) => c.run(options),
             OckamSubcommand::Policy(c) => c.run(options),

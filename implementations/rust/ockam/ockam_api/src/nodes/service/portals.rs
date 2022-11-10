@@ -11,7 +11,7 @@ use minicbor::Decoder;
 use ockam::compat::asynchronous::RwLock;
 use ockam::compat::tokio::time::timeout;
 use ockam::tcp::{InletOptions, OutletOptions};
-use ockam::{Address, Result};
+use ockam::{Address, Result, Context};
 use ockam_abac::expr::{and, eq, ident, str};
 use ockam_abac::{Action, Env, PolicyAccessControl, PolicyStorage, Resource};
 use ockam_core::api::{Request, Response, ResponseBuilder};
@@ -19,6 +19,7 @@ use ockam_core::{AccessControl, AllowAll};
 use ockam_identity::IdentityIdentifier;
 use ockam_multiaddr::proto::{Project, Secure, Service};
 use ockam_multiaddr::{MultiAddr, Protocol};
+use ockam_node::tokio::sync::RwLockReadGuard;
 use std::sync::Arc;
 
 use super::{NodeManager, NodeManagerWorker};
@@ -64,44 +65,6 @@ impl NodeManager {
 }
 
 impl NodeManagerWorker {
-    pub(super) fn get_inlets<'a>(
-        &self,
-        req: &Request<'a>,
-        registry: &'a Registry,
-    ) -> ResponseBuilder<InletList<'a>> {
-        Response::ok(req.id()).body(InletList::new(
-            registry
-                .inlets
-                .iter()
-                .map(|(alias, info)| {
-                    InletStatus::new(
-                        &info.bind_addr,
-                        info.worker_addr.to_string(),
-                        alias,
-                        None,
-                        info.outlet_route.to_string(),
-                    )
-                })
-                .collect(),
-        ))
-    }
-
-    pub(super) fn get_outlets<'a>(
-        &self,
-        req: &Request<'a>,
-        registry: &'a Registry,
-    ) -> ResponseBuilder<OutletList<'a>> {
-        Response::ok(req.id()).body(OutletList::new(
-            registry
-                .outlets
-                .iter()
-                .map(|(alias, info)| {
-                    OutletStatus::new(&info.tcp_addr, info.worker_addr.to_string(), alias, None)
-                })
-                .collect(),
-        ))
-    }
-
     pub(super) async fn create_inlet<'a>(
         &mut self,
         req: &Request<'_>,

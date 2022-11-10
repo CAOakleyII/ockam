@@ -31,7 +31,7 @@ use crate::config::lookup::ProjectLookup;
 use crate::error::ApiError;
 use crate::lmdb::LmdbStorage;
 use crate::nodes::config::NodeConfig;
-use crate::nodes::models::base::NodeStatus;
+
 use crate::nodes::models::transport::{TransportMode, TransportType};
 use crate::session::util::starts_with_host_tcp_secure;
 use crate::session::{Medic, Sessions};
@@ -39,9 +39,11 @@ use crate::{multiaddr_to_route, try_address_to_multiaddr, DefaultAddress};
 
 pub mod message;
 
+mod controllers;
 mod credentials;
 mod forwarder;
 mod identity;
+mod repository;
 mod policy;
 mod portals;
 mod secure_channel;
@@ -519,20 +521,48 @@ impl NodeManagerWorker {
         };
 
         let r = match (method, path_segments.as_slice()) {
+            // ------- PROTOTO TYPE REFACTOR CONTROLLERS ---------
             // ==*== Basic node information ==*==
             // TODO: create, delete, destroy remote nodes
             (Get, ["node"]) => {
                 let node_manager = self.node_manager.read().await;
-                Response::ok(req.id())
-                    .body(NodeStatus::new(
-                        &node_manager.node_name,
-                        "Running",
-                        ctx.list_workers().await?.len() as u32,
-                        std::process::id() as i32,
-                        node_manager.transports.len() as u32,
-                    ))
-                    .to_vec()?
+                self.get_node(req, &node_manager, ctx, dec).await?.to_vec()?
             }
+
+            // ==*== Transports ==*==
+            (Get, ["node", "transports"]) => {
+                let node_manager = self.node_manager.read().await;
+                self.get_transports(req, &node_manager, ctx, dec).await?.to_vec()?
+            }
+
+            // ==*== Secure Channels ==*==
+            (Get, ["node", "secure_channels"]) => {
+                let node_manager = self.node_manager.read().await;
+                self.get_secure_channels(req, &node_manager, ctx).await?.to_vec()?
+            }
+
+            // ==*== Identity ==*==
+            (Get, ["node", "identity"]) => {
+                let node_manager = self.node_manager.read().await;
+                self.get_identity(req, &node_manager, ctx).await?.to_vec()?
+            }
+
+            // ==*== Inlets & Outlets ==*==
+            (Get, ["node", "inlet"]) => {
+                let node_manager = self.node_manager.read().await;
+                self.get_inlets(req, &node_manager, ctx).await?.to_vec()?
+            }
+            (Get, ["node", "outlet"]) => {
+                let node_manager = self.node_manager.read().await;
+                self.get_outlets(req, &node_manager, ctx).await?.to_vec()?
+            }
+
+            // ==*== Services ==*==
+            (Get, ["node", "services"]) => {
+                let node_manager = self.node_manager.read().await;
+                self.get_services(req, &node_manager, ctx).await?.to_vec()?
+            }
+            //-----------------------------------------------------
 
             // ==*== Tcp Connection ==*==
             // TODO: Get all tcp connections
@@ -642,23 +672,11 @@ impl NodeManagerWorker {
                 .start_okta_identity_provider_service(ctx, req, dec)
                 .await?
                 .to_vec()?,
-            (Get, ["node", "services"]) => {
-                let node_manager = self.node_manager.read().await;
-                self.list_services(req, &node_manager.registry).to_vec()?
-            }
 
             // ==*== Forwarder commands ==*==
             (Post, ["node", "forwarder"]) => self.create_forwarder(ctx, req.id(), dec).await?,
 
             // ==*== Inlets & Outlets ==*==
-            (Get, ["node", "inlet"]) => {
-                let node_manager = self.node_manager.read().await;
-                self.get_inlets(req, &node_manager.registry).to_vec()?
-            }
-            (Get, ["node", "outlet"]) => {
-                let node_manager = self.node_manager.read().await;
-                self.get_outlets(req, &node_manager.registry).to_vec()?
-            }
             (Post, ["node", "inlet"]) => self.create_inlet(req, dec).await?.to_vec()?,
             (Post, ["node", "outlet"]) => self.create_outlet(req, dec).await?.to_vec()?,
             (Delete, ["node", "portal"]) => todo!(),
