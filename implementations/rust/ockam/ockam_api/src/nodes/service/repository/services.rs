@@ -7,7 +7,7 @@ impl NodeManagerWorker {
     pub(crate) async fn build_service_list<'a>(
         &self,
         node_manager: &'a RwLockReadGuard<'_, NodeManager>,
-        ctx: &mut Context
+        _ctx: &mut Context
     ) -> Result<ServiceList<'a>, ockam_core::Error> {
         let mut list = Vec::new();
         let registry = &node_manager.registry;

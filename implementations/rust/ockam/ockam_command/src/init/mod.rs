@@ -1,6 +1,6 @@
 use std::{net::{SocketAddr, IpAddr}, str::FromStr};
 
-use clap::{Args, Subcommand};
+use clap::{Args};
 use anyhow::{anyhow, Context as _, Result};
 use ockam::{Context, TcpTransport, AsyncTryClone};
 use ockam_api::nodes::{overseer::Overseer, OVERSEER_ADDR};
@@ -85,7 +85,7 @@ async fn run_impl(
     ctx: ockam::Context,
     (opts, cmd): (CommandGlobalOpts, InitCommand),
 ) -> crate::Result<()> {
-    let cfg = &opts.config;
+    let _cfg = &opts.config;
     if cmd.init_in_current_process {
         return Err(crate::Error::new(
             exitcode::CONFIG,
@@ -104,7 +104,7 @@ async fn run_impl(
 }
 
 async fn spawn_overseer_node(
-    ctx: &Context,
+    _ctx: &Context,
     opts: &CommandGlobalOpts,
     cmd: &InitCommand,
     addr: SocketAddr,
@@ -159,7 +159,7 @@ fn create_foreground_node_for_overseer(opts: &CommandGlobalOpts, cmd: &InitComma
 
 async fn run_foreground_overseer_node(
     ctx: Context,
-    (opts, cmd, addr): (CommandGlobalOpts, InitCommand, SocketAddr),
+    (_opts, cmd, _addr): (CommandGlobalOpts, InitCommand, SocketAddr),
 ) -> crate::Result<()> {
     let tcp = TcpTransport::create(&ctx).await?;
     let bind = cmd.tcp_listener_address;

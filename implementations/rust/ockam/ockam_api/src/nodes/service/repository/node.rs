@@ -1,14 +1,13 @@
 
-use ockam_identity::Identity;
+
 use ockam_node::tokio::sync::RwLockReadGuard;
-use ockam_vault::{storage::FileStorage, Vault};
-use std::{net::SocketAddr, sync::Arc, env::current_exe, fs::OpenOptions, process::Command};
+
+use std::{net::SocketAddr, env::current_exe, fs::{OpenOptions, create_dir_all}, process::Command};
 
 use ockam::Context;
 use slug::slugify;
 use ockam_core::api::Status;
-use ockam_node::tokio::fs::create_dir_all;
-use crate::{nodes::{models::{base::{NodeStatus, NodeDetails, CreateNodeRequest}, transport::{TransportType, TransportMode}}, NodeManagerWorker, NodeManager, config::NodeConfig, overseer::Overseer}, config::cli::{NodeConfigOld, OckamConfig, self}};
+use crate::{nodes::{models::{base::{NodeStatus, NodeDetails, CreateNodeRequest}, transport::{TransportType, TransportMode}}, NodeManagerWorker, NodeManager, config::NodeConfig, overseer::Overseer}, config::cli::{NodeConfigOld}};
 
 impl NodeManagerWorker {
     pub(crate) async fn build_node_status<'a, 'b>(
@@ -84,7 +83,7 @@ impl Overseer {
                 .join(slugify(&format!("node-{}", node_name)));
         
         
-            if let Err(e) = create_dir_all(&state_dir).await {
+            if let Err(e) = create_dir_all(&state_dir) {
                 error!("Error creating state directory: {:?}. Error: {}", &state_dir, e);
                 return Err(Status::InternalServerError)
             }
@@ -117,7 +116,7 @@ impl Overseer {
             );
         }
 
-        if let Err(e) = self.persist_config_updates().await {
+        if let Err(_e) = self.persist_config_updates().await {
             return Err(Status::InternalServerError)
         }
         
@@ -238,7 +237,7 @@ impl Overseer {
             cfg.nodes.get_mut(node_name).unwrap().pid = Some(child.id() as i32);
         }
 
-        if let Err(e) = self.persist_config_updates().await {
+        if let Err(_e) = self.persist_config_updates().await {
             return Err(Status::InternalServerError)
         }
     

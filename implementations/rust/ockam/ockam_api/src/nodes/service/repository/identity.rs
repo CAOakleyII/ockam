@@ -1,12 +1,12 @@
 use std::sync::Arc;
 
 use ockam::Context;
-use ockam_core::api::{Status, ResponseBuilder};
+use ockam_core::api::{Status};
 use ockam_identity::Identity;
 use ockam_node::tokio::sync::RwLockReadGuard;
 use ockam_vault::{storage::FileStorage, Vault};
 
-use crate::{nodes::{NodeManagerWorker, NodeManager, models::identity::{ShortIdentityResponse, LongIdentityResponse, IdentityResponse}, overseer::Overseer}, config::cli::{OckamConfig, self}};
+use crate::{nodes::{NodeManagerWorker, NodeManager, models::identity::{ShortIdentityResponse, LongIdentityResponse, IdentityResponse}, overseer::Overseer}, config::cli::{self}};
 
 impl NodeManagerWorker {
 
@@ -37,7 +37,7 @@ impl NodeManagerWorker {
     pub(crate) async fn build_short_identity_response<'a>(
         &self,
         node_manager: &'a RwLockReadGuard<'_, NodeManager>,
-        ctx: &mut Context
+        _ctx: &mut Context
     ) -> Result<ShortIdentityResponse<'a>, ockam_core::Error> {
         let identity = node_manager.identity()?;
         let identifier = identity.identifier();
@@ -49,7 +49,7 @@ impl NodeManagerWorker {
     pub(crate) async fn build_long_identity_response<'a>(
         &self,
         node_manager: &'a RwLockReadGuard<'_, NodeManager>,
-        ctx: &mut Context
+        _ctx: &mut Context
     ) -> Result<LongIdentityResponse<'a>, ockam_core::Error> {
         let identity = node_manager.identity()?;
         let identity = identity.export().await?;
@@ -82,7 +82,7 @@ impl Overseer {
     
         let storage = match FileStorage::create(default_vault_path.clone()).await {
             Ok(s) => s,
-            Err(e) => {
+            Err(_e) => {
                 return Err(Status::InternalServerError)
             }
         };
@@ -92,20 +92,20 @@ impl Overseer {
         if self.get_default_identity().await.is_none() {
             let identity = match Identity::create(ctx, &vault).await {
                 Ok(i) => i,
-                Err(e) => {
+                Err(_e) => {
                     return Err(Status::InternalServerError)
                 }
             };
             let exported_data = match identity.export().await {
                 Ok(i) => i,
-                Err(e) => {
+                Err(_e) => {
                     return Err(Status::InternalServerError)
                 }
             };
             self.set_default_identity(Some(exported_data)).await;
         };
 
-        if let Err(e) = self.persist_config_updates().await {
+        if let Err(_e) = self.persist_config_updates().await {
             return Err(Status::InternalServerError)
         }
     

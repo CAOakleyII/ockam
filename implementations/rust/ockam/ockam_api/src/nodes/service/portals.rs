@@ -1,8 +1,8 @@
 use crate::error::ApiError;
 use crate::nodes::models::portal::{
-    CreateInlet, CreateOutlet, InletList, InletStatus, OutletList, OutletStatus,
+    CreateInlet, CreateOutlet, InletStatus, OutletStatus,
 };
-use crate::nodes::registry::{InletInfo, OutletInfo, Registry};
+use crate::nodes::registry::{InletInfo, OutletInfo};
 use crate::nodes::service::random_alias;
 use crate::session::{util, Data, Replacer, Session};
 use crate::{actions, resources};
@@ -11,7 +11,7 @@ use minicbor::Decoder;
 use ockam::compat::asynchronous::RwLock;
 use ockam::compat::tokio::time::timeout;
 use ockam::tcp::{InletOptions, OutletOptions};
-use ockam::{Address, Result, Context};
+use ockam::{Address, Result};
 use ockam_abac::expr::{and, eq, ident, str};
 use ockam_abac::{Action, Env, PolicyAccessControl, PolicyStorage, Resource};
 use ockam_core::api::{Request, Response, ResponseBuilder};
@@ -19,7 +19,7 @@ use ockam_core::{AccessControl, AllowAll};
 use ockam_identity::IdentityIdentifier;
 use ockam_multiaddr::proto::{Project, Secure, Service};
 use ockam_multiaddr::{MultiAddr, Protocol};
-use ockam_node::tokio::sync::RwLockReadGuard;
+
 use std::sync::Arc;
 
 use super::{NodeManager, NodeManagerWorker};

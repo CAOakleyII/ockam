@@ -1,8 +1,6 @@
 #![allow(missing_docs)]
 
-use crate::CowStr;
 use crate::compat::borrow::Cow;
-use crate::compat::collections::HashMap;
 use crate::compat::rand;
 use crate::compat::vec::Vec;
 use crate::errcode::{Kind, Origin};

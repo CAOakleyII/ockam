@@ -13,12 +13,12 @@ use crate::nodes::NodeManager;
 use crate::DefaultAddress;
 use minicbor::Decoder;
 use ockam::identity::TrustEveryonePolicy;
-use ockam::{Address, Result, Route, Context};
+use ockam::{Address, Result, Route};
 use ockam_core::api::{Request, Response, ResponseBuilder};
 use ockam_core::{route, AsyncTryClone};
 use ockam_identity::{Identity, IdentityIdentifier, TrustMultiIdentifiersPolicy};
 use ockam_multiaddr::MultiAddr;
-use ockam_node::tokio::sync::RwLockReadGuard;
+
 use ockam_vault::Vault;
 
 impl NodeManager {

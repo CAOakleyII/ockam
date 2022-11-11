@@ -1,11 +1,11 @@
-use std::{net::{SocketAddr, IpAddr, TcpListener, AddrParseError}, str::FromStr};
+use std::{net::{SocketAddr, IpAddr, TcpListener}, str::FromStr};
 
 use minicbor::Decoder;
 use ockam::Context;
-use slug::slugify;
+
 use ockam_core::api::{Request, ResponseBuilder, Response, Status};
-use ockam_node::tokio::{sync::RwLockReadGuard, fs::create_dir_all};
-use crate::{nodes::{models::{base::{NodeStatus, GetNodeStatusRequest, NodeList, CreateNodeRequest}}, NodeManagerWorker, NodeManager, overseer::Overseer, config::NodeConfig}, config::cli::{NodeConfigOld, OckamConfig}};
+use ockam_node::tokio::{sync::RwLockReadGuard};
+use crate::{nodes::{models::{base::{NodeStatus, GetNodeStatusRequest, NodeList, CreateNodeRequest}}, NodeManagerWorker, NodeManager, overseer::Overseer}, config::cli::{OckamConfig}};
 
 
 impl NodeManagerWorker {

@@ -9,7 +9,7 @@ impl NodeManagerWorker {
     pub(crate) async fn build_secure_channel_listeners<'a>(
         &self,
         node_manager: &'a RwLockReadGuard<'_, NodeManager>,
-        ctx: &mut Context
+        _ctx: &mut Context
     ) -> Result<Vec<String>, ockam_core::Error> {
         let registry = &node_manager.registry;
 
@@ -24,7 +24,7 @@ impl NodeManagerWorker {
     pub(crate) async fn build_secure_channels_list<'a>(
         &self,
         node_manager: &'a RwLockReadGuard<'_, NodeManager>,
-        ctx: &mut Context
+        _ctx: &mut Context
     ) -> Result<SecureChannelList<'a>, ockam_core::Error> {
         Ok(SecureChannelList::new(
             node_manager

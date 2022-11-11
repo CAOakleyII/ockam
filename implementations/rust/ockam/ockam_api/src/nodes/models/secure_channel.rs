@@ -6,7 +6,7 @@ use crate::nodes::registry::SecureChannelInfo;
 use ockam_core::compat::borrow::Cow;
 #[cfg(feature = "tag")]
 use ockam_core::TypeTag;
-use ockam_core::{route, Address, CowStr, Result, TypeTag};
+use ockam_core::{route, Address, CowStr, Result};
 use ockam_identity::IdentityIdentifier;
 use ockam_multiaddr::MultiAddr;
 use serde::Serialize;

@@ -6,13 +6,13 @@ mod secure_channels;
 use cli_table::{Cell, Table, Style, print_stdout};
 use colorful::Colorful;
 use ockam::Route;
-use ockam_api::nodes::models::transport;
+
 use ockam_api::{addr_to_multiaddr, route_to_multiaddr};
 use ockam_api::nodes::models::base::{NodeStatus, NodeDetails, GetNodeStatusRequest, NodeList};
 use ockam_multiaddr::MultiAddr;
-use ockam_multiaddr::proto::{Node, DnsAddr, Tcp};
+use ockam_multiaddr::proto::{Node};
 
-use crate::secure_channel::SecureChannelCommand;
+
 use crate::util::Rpc;
 use crate::util::api_builder::ApiBuilder;
 use crate::{help, CommandGlobalOpts};

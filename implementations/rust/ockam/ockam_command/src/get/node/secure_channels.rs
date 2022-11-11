@@ -3,10 +3,10 @@ use std::borrow::Cow;
 use clap::Args;
 use cli_table::{Table, Cell, Style, print_stdout};
 use ockam::route;
-use ockam_abac::ParseError;
+
 use ockam_api::{nodes::models::secure_channel::{SecureChannelList, ShowSecureChannelResponse}, route_to_multiaddr};
 
-use crate::{CommandGlobalOpts, util::{api_builder::ApiBuilder, Rpc}, help, error::Error};
+use crate::{CommandGlobalOpts, util::{api_builder::ApiBuilder, Rpc}, help};
 
 const HELP_DETAIL: &str ="\
 About:

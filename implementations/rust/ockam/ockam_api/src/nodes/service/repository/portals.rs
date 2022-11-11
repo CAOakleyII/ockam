@@ -6,7 +6,7 @@ impl NodeManagerWorker {
     pub(crate) async fn build_inlets_list<'a>(
         &self,
         node_manager: &'a RwLockReadGuard<'_, NodeManager>,
-        ctx: &mut Context
+        _ctx: &mut Context
     ) -> Result<InletList<'a>, ockam_core::Error> {
         Ok(InletList::new(
         node_manager.registry
@@ -28,7 +28,7 @@ impl NodeManagerWorker {
     pub(crate) async fn build_outlets_list<'a>(
         &self,
         node_manager: &'a RwLockReadGuard<'_, NodeManager>,
-        ctx: &mut Context
+        _ctx: &mut Context
     ) -> Result<OutletList<'a>, ockam_core::Error> {
         Ok(OutletList::new(
         node_manager.registry
