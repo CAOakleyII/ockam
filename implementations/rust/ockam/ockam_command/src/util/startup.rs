@@ -113,3 +113,56 @@ pub fn spawn_node(
 
     Ok(())
 }
+
+
+/// A utility function to spawn a new overseer node into foreground mode
+///
+/// This function is used by `ockam init`
+pub fn spawn_overseer_node(
+    cfg: &OckamConfig,
+    verbose: u8,
+    name: &str,
+    address: &str,
+) -> crate::Result<()> {
+    // On systems with non-obvious path setups (or during
+    // development) re-executing the current binary is a more
+    // deterministic way of starting a node.
+    let ockam_exe = current_exe().unwrap_or_else(|_| "ockam".into());
+
+    let (mlog, elog) = cfg.node_log_paths(name).unwrap();
+
+    let main_log_file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(mlog)
+        .context("failed to open log path")?;
+
+    let stderr_log_file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(elog)
+        .context("failed to open stderr log path")?;
+
+    let mut args = vec![
+        "init".to_string(),
+        match verbose {
+            0 => "-vv".to_string(),
+            v => format!("-{}", "v".repeat(v as usize)),
+        },
+        "--tcp-listener-address".to_string(),
+        address.to_string(),
+        "--init-in-current-process".to_string()
+    ];
+
+    let child = Command::new(ockam_exe)
+        .args(args)
+        .stdout(main_log_file)
+        .stderr(stderr_log_file)
+        .spawn()?;
+
+    // Update the pid in the config (should we remove this?)
+    cfg.set_node_pid(name, child.id() as i32)?;
+    cfg.persist_config_updates()?;
+
+    Ok(())
+}

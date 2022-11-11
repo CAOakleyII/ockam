@@ -30,14 +30,14 @@ pub struct TransportsCommand {
 
 impl TransportsCommand {
     pub fn run(self, api_builder: &mut ApiBuilder, options: CommandGlobalOpts) {
-        api_builder.to_path("transports".to_string());
-
         let payload = GetTransportList::new(
             self.tts,
             self.tms
         );
-        
-        api_builder.exec_with_body(payload, options, print_response);
+
+        api_builder
+            .to_path("transports".to_string())
+            .exec_with_body(payload, options, print_response);
     }
 }
 
@@ -51,7 +51,7 @@ fn print_response(
                 println!("Error outputing the results to stdout.")
             }
         },
-        Err(_) => println!("Error parsing the list of transports.")
+        Err(e) => println!("Error getting list of transports: {:?}", e)
     }
 }
 

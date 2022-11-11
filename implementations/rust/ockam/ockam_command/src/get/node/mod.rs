@@ -3,11 +3,12 @@ use clap::{Args, Subcommand};
 mod transports;
 mod secure_channels;
 
+use cli_table::{Cell, Table, Style, print_stdout};
 use colorful::Colorful;
 use ockam::Route;
 use ockam_api::nodes::models::transport;
 use ockam_api::{addr_to_multiaddr, route_to_multiaddr};
-use ockam_api::nodes::models::base::{NodeStatus, NodeDetails, GetNodeStatusRequest};
+use ockam_api::nodes::models::base::{NodeStatus, NodeDetails, GetNodeStatusRequest, NodeList};
 use ockam_multiaddr::MultiAddr;
 use ockam_multiaddr::proto::{Node, DnsAddr, Tcp};
 
@@ -20,7 +21,7 @@ use crate::node::NodeOpts;
 use self::secure_channels::SecureChannelsCommand;
 use self::transports::TransportsCommand;
 
-const HELP_DETAIL: &str ="\
+pub const NODE_HELP_DETAIL: &str ="\
 About:
     An Ockam node is any running application that can communicate with other applications
     using various Ockam protocols like Routing, Secure Channels, Forwarding etc.
@@ -73,19 +74,70 @@ About:
 #[derive(Clone, Debug, Args)]
 #[command(
     arg_required_else_help = false,
-    after_long_help = help::template(HELP_DETAIL)
+    after_long_help = help::template(NODE_HELP_DETAIL)
 )]
 pub struct NodesCommand {}
 impl NodesCommand {
-    pub fn run (self, api_builder: &mut ApiBuilder, _options: CommandGlobalOpts) {
-        api_builder.to_path("nodes".to_string());
+    pub fn run (self, api_builder: &mut ApiBuilder, options: CommandGlobalOpts) {
+        api_builder
+            .to_path("nodes".to_string())
+            .exec(options, print_nodes);
     }
+}
+
+fn print_nodes(
+    rpc: Rpc
+) {
+    let resp = rpc.parse_response::<NodeList>();
+    match resp {
+        Ok(node_list) => {
+            if print_node_list(&node_list).is_err() {
+                println!("Error outputing the results")
+            }
+        },
+        Err(_) => println!("Error parsing response of node list."),
+    }
+}
+
+fn print_node_list(
+    node_list: &NodeList
+) -> crate::Result<()> {
+    let table = node_list
+    .list
+    .iter()
+    .fold(
+        vec![],
+        |mut acc,
+            NodeStatus {
+                node_name,
+                status,
+                pid,
+                transports,
+                workers,
+                ..
+            } | {
+            let row = vec![node_name.cell(), status.cell(), pid.cell(), transports.cell(), workers.cell()];
+            acc.push(row);
+            acc
+        },
+    )
+    .table()
+    .title(vec![
+        "Node".cell().bold(true),
+        "Status".cell().bold(true),
+        "PID".cell().bold(true),
+        "# of Transports".cell().bold(true),
+        "# of Workers".cell().bold(true),
+    ]);
+    print_stdout(table)?;
+
+    Ok(())
 }
 
 /// Get details on a specific node or it's resources
 #[derive(Clone, Debug, Args)]
 #[command(
-    after_long_help = help::template(HELP_DETAIL)
+    after_long_help = help::template(NODE_HELP_DETAIL)
 )]
 pub struct NodeCommand { 
     #[command(flatten)]
@@ -107,8 +159,9 @@ pub enum NodeSubcommand {
 impl NodeCommand {
     pub fn run(self, api_builder: &mut ApiBuilder, options: CommandGlobalOpts) {
         // Build any actions that will always be relevant on this command and subcommands
-        api_builder.to_path("node".to_string());
-        api_builder.rpc_to_node(self.node_opts.api_node);
+        api_builder
+            .to_path("node".to_string())
+            .for_node(self.node_opts.api_node);
 
         match self.subcommand {
             Some(subcommand) => {
@@ -151,7 +204,7 @@ fn print_node_status(node_status: &NodeStatus) {
     }
 
     // ! node_port is only available on NodeConfigOld, more work to return from API at the moment
-    // TODO: Overseer work
+    // Oakley - TODO: Ready to be fixed now
     // let mut m = MultiAddr::default();
     // if m.push_back(DnsAddr::new("localhost")).is_ok() && m.push_back(Tcp::new(node_status.node_port)).is_ok() {
     //     println!("    Verbose: {}", m);

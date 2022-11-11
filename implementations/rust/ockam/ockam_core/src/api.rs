@@ -1,11 +1,14 @@
 #![allow(missing_docs)]
 
+use crate::CowStr;
 use crate::compat::borrow::Cow;
+use crate::compat::collections::HashMap;
 use crate::compat::rand;
 use crate::compat::vec::Vec;
 use crate::errcode::{Kind, Origin};
 use crate::Result;
 use core::fmt::{self, Display, Formatter};
+use core::hash::Hash;
 use minicbor::encode::{self, Encoder, Write};
 use minicbor::{Decode, Decoder, Encode};
 use tinyvec::ArrayVec;
@@ -39,7 +42,19 @@ pub struct Request<'a> {
     /// how to handle unknown methods.
     #[n(3)] method: Option<Method>,
     /// Indicator if a request body is expected after this header.
-    #[n(4)] has_body: bool
+    #[n(4)] has_body: bool,
+    /// Optional parameters to be supplied with the request
+    /// 
+    /// Ideally this would be a HashMap, however need to do more work to 
+    /// determine Encode/Decode availablity for `no_std` compatible HashMap
+    #[n(5)] parameters: Option<RequestParameters<'a>>,
+}
+
+/// Request Header Parameters - Similar to HTTP Headers
+#[derive(Debug, Clone, Encode, Decode)]
+#[rustfmt::skip]
+pub struct RequestParameters<'a> {
+    #[n(0)] x_node_name: Option<Cow<'a, str>>,
 }
 
 /// The response header.
@@ -205,6 +220,7 @@ impl<'a> Request<'a> {
             method: Some(method),
             path: path.into(),
             has_body,
+            parameters: None,
         }
     }
 
@@ -254,6 +270,25 @@ impl<'a> Request<'a> {
     pub fn has_body(&self) -> bool {
         self.has_body
     }
+
+    pub fn parameters(&self) -> &Option<RequestParameters<'a>> {
+        &self.parameters
+    }
+}
+
+impl<'a> RequestParameters<'a> {
+    pub fn new(x_node_name: Option<Cow<'a, str>>) -> Self {
+        Self {
+            x_node_name
+        }
+    }
+
+    pub fn x_node_name(&self) -> Option<String>{
+        match &self.x_node_name {
+            Some(x) => Some(x.to_string()),
+            None => None
+        }
+    }
 }
 
 impl Response {
@@ -281,6 +316,10 @@ impl Response {
 
     pub fn bad_request(re: Id) -> ResponseBuilder {
         Response::builder(re, Status::BadRequest)
+    }
+
+    pub fn conflict(re: Id) -> ResponseBuilder {
+        Response::builder(re, Status::Conflict)
     }
 
     pub fn not_found(re: Id) -> ResponseBuilder {
@@ -415,6 +454,11 @@ impl<'a, T> RequestBuilder<'a, T> {
 
     pub fn method(mut self, m: Method) -> Self {
         self.header.method = Some(m);
+        self
+    }
+
+    pub fn parameters(mut self, parameters: Option<RequestParameters<'a>>) ->  Self {
+        self.header.parameters = parameters;
         self
     }
 

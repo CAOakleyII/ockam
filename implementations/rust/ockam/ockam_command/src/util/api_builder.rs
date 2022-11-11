@@ -1,16 +1,37 @@
+use ockam::compat::borrow::Cow;
 use minicbor::Encode;
-use ockam::TcpTransport;
-use ockam_core::api::{Request, RequestBuilder, Method};
+use ockam::{TcpTransport};
+use ockam_api::nodes::OVERSEER_ADDR;
+use ockam_core::{api::{Request, RequestBuilder, Method, RequestParameters}};
 
-use crate::CommandGlobalOpts;
+use crate::{CommandGlobalOpts, init::OVERSEER_NODE_NAME};
 
 use super::{node_rpc, RpcBuilder, Rpc};
 
+/// Helps build an Ockam API Request
+/// 
+/// #### Example
+/// 
+/// ```rs
+/// let api_builder = ApiBuilder::new(Method::Get)
+/// 
+/// api_builder
+///     .to_path("node")
+///     .to_path("transports")
+///     .for_node("relay")
+///     .exec_with_body(payload, options, handle_response)`
+/// ```
 #[derive(Debug)]
 pub struct ApiBuilder {
     method: Method,
     path: Vec<String>,
     node_name: Option<String>,
+    request_protocol: RequestProtcol,
+}
+
+#[derive(Debug)]
+pub enum RequestProtcol {
+    OckamRouting,
 }
 
 impl ApiBuilder {
@@ -19,15 +40,18 @@ impl ApiBuilder {
             method,
             path: Vec::new(),
             node_name: None,
+            request_protocol: RequestProtcol::OckamRouting
         }
     }
 
+    /// Builds upon the path with another segment
     pub fn to_path<'a>(&'a mut self, path: String) -> &'a mut Self {
         self.path.push(path);
         self
     }
 
-    pub fn rpc_to_node<'a> (
+    /// Indicates a node for the request to be sent to
+    pub fn for_node<'a> (
         &'a mut self,
         node_name: String 
     ) -> &'a mut Self {
@@ -35,6 +59,13 @@ impl ApiBuilder {
         self
     }
 
+    /// Builds and executes the request
+    /// 
+    /// Requires a body to be provided, to execute without a body use `exec`
+    /// 
+    /// #### Arguments
+    ///
+    /// * `f` - A function that will be called with the `rpc` containing the response.
     pub fn exec_with_body<'a, T, F>(
         &'a mut self,
         b: T,
@@ -45,26 +76,19 @@ impl ApiBuilder {
         T: Encode<()> + Send + Sync + 'static,
         F: FnOnce(Rpc) + Send + Sync + 'static
     {
-        let path = self.path.join("/");
-        let req_builder = match self.method {
-            Method::Get => Request::get(path),
-            Method::Post => Request::post(path),
-            Method::Put => Request::put(path),
-            Method::Delete => Request::delete(path),
-            Method::Patch => Request::patch(path),
-        };
-
-        let req_body_builder = req_builder.body(b);
-
-        match &self.node_name {
-            Some(node_name) => node_rpc(
+        // ! could be extended to exec requests over other protocols
+        // ! Though node--[ockam-router]-->node works pretty well.
+        match self.request_protocol {
+            RequestProtcol::OckamRouting => node_rpc(
                 Self::node_rpc_exec, 
-                (opts, node_name.clone(), req_body_builder, f)
-            ),
-            None => println!("API calls currently must be ran against an RPC."),
+                (opts, OVERSEER_NODE_NAME.to_string(), self.build().body(b), f)
+            )
         }
     }
 
+    /// Builds and executes the request
+    /// 
+    /// In order to provide a payload, use `exec_with_body`
     pub fn exec<'a, F>(
         &'a mut self,
         opts: CommandGlobalOpts,
@@ -73,8 +97,19 @@ impl ApiBuilder {
     where
         F: FnOnce(Rpc) + Send + Sync + 'static
     {
+        // ! could be extended to exec requests over other protocols
+        // ! Though node--[ockam-router]-->node works well.
+        match self.request_protocol {
+            RequestProtcol::OckamRouting => node_rpc(
+                Self::node_rpc_exec, 
+                (opts, OVERSEER_NODE_NAME.to_string(), self.build(), f)
+            )
+        }
+    }
+
+    fn build<'a>(&self) -> RequestBuilder<'a> {
         let path = self.path.join("/");
-        let req_builder = match self.method {
+        let mut req_builder = match self.method {
             Method::Get => Request::get(path),
             Method::Post => Request::post(path),
             Method::Put => Request::put(path),
@@ -82,13 +117,15 @@ impl ApiBuilder {
             Method::Patch => Request::patch(path),
         };
 
-        match &self.node_name {
-            Some(node_name) => node_rpc(
-                Self::node_rpc_exec, 
-                (opts, node_name.clone(), req_builder, f)
-            ),
-            None => println!("API calls currently must be ran against an RPC."),
+        if let Some(node_name) = &self.node_name {
+            req_builder = req_builder.parameters(Some(
+                RequestParameters::new(Some(
+                    Cow::from(node_name.to_string())
+                ))
+            ));
         }
+
+        req_builder
     }
 
     async fn node_rpc_exec<T, F>(
@@ -100,7 +137,7 @@ impl ApiBuilder {
         F: FnOnce(Rpc) + Send + Sync + 'static
     {
         let tcp = TcpTransport::create(&ctx).await?;
-        let mut rpc = RpcBuilder::new(&ctx, &opts, &node_name).tcp(&tcp)?.build();
+        let mut rpc = RpcBuilder::new_to(&ctx, &opts, &node_name, OVERSEER_ADDR.into()).tcp(&tcp)?.build();
 
         rpc.request(req_builder).await?;
         f(rpc);

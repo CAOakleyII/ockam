@@ -6,11 +6,13 @@ mod authenticated;
 mod completion;
 mod configuration;
 mod credential;
+mod create;
 mod enroll;
 mod error;
 mod forwarder;
 mod get;
 mod help;
+mod init;
 mod identity;
 mod message;
 mod node;
@@ -32,12 +34,14 @@ use anyhow::Context;
 use authenticated::AuthenticatedCommand;
 use completion::CompletionCommand;
 use configuration::ConfigurationCommand;
+use create::CreateCommand;
 use credential::CredentialCommand;
 use enroll::EnrollCommand;
 use error::{Error, Result};
 use forwarder::ForwarderCommand;
 use get::GetCommand;
 use identity::IdentityCommand;
+use init::InitCommand;
 use message::MessageCommand;
 use node::NodeCommand;
 use policy::PolicyCommand;
@@ -297,7 +301,11 @@ pub enum OckamSubcommand {
     #[command(display_order = 821)]
     Policy(PolicyCommand),
 
+    #[command(display_order = 849)]
+    Init(InitCommand),
     #[command(display_order = 850)]
+    Create(CreateCommand),
+    #[command(display_order = 851)]
     Get(GetCommand),
 
     #[command(display_order = 900)]
@@ -358,6 +366,8 @@ impl OckamCommand {
             OckamSubcommand::Configuration(c) => c.run(options),
             OckamSubcommand::Enroll(c) => c.run(options),
             OckamSubcommand::Forwarder(c) => c.run(options),
+            OckamSubcommand::Init(c) => c.run(options),
+            OckamSubcommand::Create(c) => c.run(options),
             OckamSubcommand::Get(c) => c.run(options),
             OckamSubcommand::Message(c) => c.run(options),
             OckamSubcommand::Node(c) => c.run(options),

@@ -1,9 +1,16 @@
-use ockam::Context;
-use ockam_node::tokio::sync::RwLockReadGuard;
+use std::sync::Arc;
 
-use crate::nodes::{NodeManagerWorker, NodeManager, models::identity::{ShortIdentityResponse, LongIdentityResponse, IdentityResponse}};
+use ockam::Context;
+use ockam_core::api::{Status, ResponseBuilder};
+use ockam_identity::Identity;
+use ockam_node::tokio::sync::RwLockReadGuard;
+use ockam_vault::{storage::FileStorage, Vault};
+
+use crate::{nodes::{NodeManagerWorker, NodeManager, models::identity::{ShortIdentityResponse, LongIdentityResponse, IdentityResponse}, overseer::Overseer}, config::cli::{OckamConfig, self}};
 
 impl NodeManagerWorker {
+
+    /// Retrieves the identity model, with both short and long when possible.
     pub(crate) async fn build_identity_response<'a>(
         &self,
         node_manager: &'a RwLockReadGuard<'_, NodeManager>,
@@ -26,6 +33,7 @@ impl NodeManagerWorker {
         ))
     }
 
+    /// Retrieves the short identity
     pub(crate) async fn build_short_identity_response<'a>(
         &self,
         node_manager: &'a RwLockReadGuard<'_, NodeManager>,
@@ -37,6 +45,7 @@ impl NodeManagerWorker {
         Ok(ShortIdentityResponse::new(identifier.to_string()))
     }
 
+    /// Retrieves the long identity
     pub(crate) async fn build_long_identity_response<'a>(
         &self,
         node_manager: &'a RwLockReadGuard<'_, NodeManager>,
@@ -47,4 +56,60 @@ impl NodeManagerWorker {
     
         Ok(LongIdentityResponse::new(identity))
     }
+}
+
+impl Overseer {
+
+    /// Creates the default identity and vault 
+    /// if they are not already existing.
+    pub(crate) async fn create_default_identity_if_needed(
+        &mut self,
+        ctx: &Context
+    ) ->  Result<(), Status> {
+        // Get default root vault (create if needed)
+        let default_vault_path = match self.get_default_vault_path().await {
+            Some(p) => p,
+            None => {
+                let default_vault_path = cli::OckamConfig::directories()
+                .config_dir()
+                .join("default_vault.json");
+    
+                self.set_default_vault_path(Some(default_vault_path.clone())).await;
+        
+                default_vault_path
+            }
+        };
+    
+        let storage = match FileStorage::create(default_vault_path.clone()).await {
+            Ok(s) => s,
+            Err(e) => {
+                return Err(Status::InternalServerError)
+            }
+        };
+        let vault = Vault::new(Some(Arc::new(storage)));
+    
+        // Get default root identity (create if needed)
+        if self.get_default_identity().await.is_none() {
+            let identity = match Identity::create(ctx, &vault).await {
+                Ok(i) => i,
+                Err(e) => {
+                    return Err(Status::InternalServerError)
+                }
+            };
+            let exported_data = match identity.export().await {
+                Ok(i) => i,
+                Err(e) => {
+                    return Err(Status::InternalServerError)
+                }
+            };
+            self.set_default_identity(Some(exported_data)).await;
+        };
+
+        if let Err(e) = self.persist_config_updates().await {
+            return Err(Status::InternalServerError)
+        }
+    
+        Ok(())
+    }
+    
 }

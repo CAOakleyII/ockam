@@ -1,4 +1,4 @@
-mod node;
+pub mod node;
 
 pub(crate) use node::{NodeCommand, NodesCommand};
 use clap::{Args, Subcommand};
@@ -7,7 +7,7 @@ use crate::{help, CommandGlobalOpts, util::{api_builder::ApiBuilder}};
 
 const HELP_DETAIL: &str = "\
 About:
-    Displays a list of resources within the environment.
+    Gets details of resources within the environment.
 
 Examples:
 ```sh
@@ -22,7 +22,7 @@ Examples:
 ```
 ";
 
-/// View a list of resources
+/// Gets details of resources within the environment
 #[derive(Clone, Debug, Args)]
 #[command(
     arg_required_else_help = false,
@@ -33,6 +33,7 @@ pub struct GetCommand {
     subcommand: GetSubcommand,
 }
 
+/// Gets details of resources within the environment
 #[derive(Clone, Debug, Subcommand)]
 pub enum GetSubcommand {
     Nodes(NodesCommand),

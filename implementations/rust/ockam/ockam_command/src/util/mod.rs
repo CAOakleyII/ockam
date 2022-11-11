@@ -63,6 +63,16 @@ impl<'a> RpcBuilder<'a> {
         }
     }
 
+    pub fn new_to(ctx: &'a Context, opts: &'a CommandGlobalOpts, node_name: &str, to: Route) -> Self {
+        RpcBuilder {
+            ctx,
+            opts,
+            node_name: node_name.to_string(),
+            to,
+            mode: RpcMode::Embedded,
+        }
+    }
+
     pub fn to(mut self, to: &MultiAddr) -> Result<Self> {
         self.to = ockam_api::multiaddr_to_route(to)
             .ok_or_else(|| anyhow!("failed to convert {to} to route"))?;

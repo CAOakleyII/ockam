@@ -76,3 +76,43 @@ impl<V: ConfigValues> AtomicUpdater<V> {
         Ok(())
     }
 }
+/// Takes a version of the Config and persists it to disk
+#[must_use]
+pub struct AtomicUpdaterAsync<V: ConfigValues> {
+    config_path: PathBuf,
+    inner: Arc<ockam::compat::asynchronous::RwLock<V>>,
+}
+
+impl<V: ConfigValues> AtomicUpdaterAsync<V> {
+    /// Create a new atomic updater
+    pub fn new(config_path: PathBuf, inner: Arc<ockam::compat::asynchronous::RwLock<V>>) -> Self {
+        Self { config_path, inner }
+    }
+
+    /// Do the thing that we said it was gonna do
+    pub async fn run(self) -> anyhow::Result<()> {
+        let inner = self.inner.read().await;
+        let tmp_path = make_tmp_path(&self.config_path);
+
+        // Repeatedly try to create this file, in case another
+        // instance is _also_ trying to currently update the
+        // configuration
+        let mut new_f = loop {
+            match File::create(&tmp_path) {
+                Ok(f) => break f,
+                Err(_) => {
+                    std::thread::sleep(Duration::from_millis(10));
+                }
+            }
+        };
+
+        // First write the file
+        let json: String = serde_json::to_string_pretty(&*inner)?;
+        new_f.write_all(json.as_bytes())?;
+
+        // Then rename it over the existing config
+        fs::rename(&tmp_path, &self.config_path)?;
+
+        Ok(())
+    }
+}

@@ -28,9 +28,9 @@ pub struct SecureChannelsCommand { }
 
 impl SecureChannelsCommand {
     pub fn run(self, api_builder: &mut ApiBuilder, options: CommandGlobalOpts) {
-        api_builder.to_path("secure_channels".to_string());
-
-        api_builder.exec(options, print_response)
+        api_builder
+            .to_path("secure_channels".to_string())
+            .exec(options, print_response)
     }
 }
 

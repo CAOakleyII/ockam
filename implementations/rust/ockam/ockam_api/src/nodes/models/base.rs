@@ -2,6 +2,8 @@
 
 // TODO: split up this file into sub modules
 
+use std::path::PathBuf;
+
 use minicbor::{Decode, Encode};
 use ockam_core::CowStr;
 
@@ -11,6 +13,56 @@ use ockam_core::TypeTag;
 use super::{services::ServiceList, identity::ShortIdentityResponse, transport::TransportList, portal::{InletList, OutletList}};
 
 ///////////////////-!  REQUEST BODIES
+
+/// Request body when creating a node
+#[derive(Debug, Clone, Decode, Encode)]
+#[rustfmt::skip]
+#[cbor(map)]
+pub struct CreateNodeRequest {
+    #[cfg(feature = "tag")]
+    #[n(0)] tag: TypeTag<6666666>,
+    #[n(1)] pub node_name: String,
+    #[n(2)] pub tcp_listener_address: String,
+    #[n(3)] pub skip_defaults: bool,
+    #[n(4)] pub enable_credential_checks: bool,
+    #[n(5)] pub no_shared_identity: bool,
+    #[n(6)] pub launch_config: Option<PathBuf>,
+    #[n(7)] pub no_watchdog: bool,
+    #[n(8)] pub project: Option<PathBuf>,
+    #[n(9)] pub config: Option<PathBuf>,
+    #[n(10)] pub verbose: u8,
+}
+
+impl CreateNodeRequest {
+    pub fn new(
+        node_name: String,
+        tcp_listener_address: String,
+        skip_defaults: bool,
+        enable_credential_checks: bool,
+        no_shared_identity: bool,
+        launch_config: Option<PathBuf>,
+        no_watchdog: bool,
+        project: Option<PathBuf>,
+        config: Option<PathBuf>,
+        verbose:  u8,
+    ) -> Self {
+        Self {
+            #[cfg(feature = "tag")]
+            tag: TypeTag,
+            node_name,
+            tcp_listener_address,
+            skip_defaults,
+            enable_credential_checks,
+            no_shared_identity,
+            launch_config,
+            no_watchdog,
+            project,
+            config,
+            verbose,
+        }
+    }
+}
+
 /// Request body when retrieving node status
 #[derive(Debug, Clone, Decode, Encode)]
 #[rustfmt::skip]

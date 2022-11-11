@@ -526,7 +526,10 @@ impl NodeManagerWorker {
             // TODO: create, delete, destroy remote nodes
             (Get, ["node"]) => {
                 let node_manager = self.node_manager.read().await;
-                self.get_node(req, &node_manager, ctx, dec).await?.to_vec()?
+                match self.get_node(req, &node_manager, ctx, dec).await {
+                    Ok(r) => r.to_vec()?,
+                    Err(r) => r.to_vec()?,
+                }
             }
 
             // ==*== Transports ==*==
