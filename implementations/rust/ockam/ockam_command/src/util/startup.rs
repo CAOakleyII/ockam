@@ -114,7 +114,6 @@ pub fn spawn_node(
     Ok(())
 }
 
-
 /// A utility function to spawn a new overseer node into foreground mode
 ///
 /// This function is used by `ockam init`
@@ -151,7 +150,7 @@ pub fn spawn_overseer_node(
         },
         "--tcp-listener-address".to_string(),
         address.to_string(),
-        "--init-in-current-process".to_string()
+        "--init-in-current-process".to_string(),
     ];
 
     let child = Command::new(ockam_exe)

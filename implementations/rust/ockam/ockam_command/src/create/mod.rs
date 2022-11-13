@@ -1,8 +1,8 @@
 mod node;
 
+use crate::{help, util::api_builder::ApiBuilder, CommandGlobalOpts};
 use clap::{Args, Subcommand};
 use ockam_core::api::Method;
-use crate::{help, CommandGlobalOpts, util::api_builder::ApiBuilder};
 
 use self::node::NodeCommand;
 
@@ -34,12 +34,12 @@ pub enum CreateSubcommand {
 }
 
 /// Command to create a resource
-impl CreateCommand { 
+impl CreateCommand {
     pub fn run(self, options: CommandGlobalOpts) {
         let mut api_builder = ApiBuilder::new(Method::Post);
 
         match self.subcommand {
-            CreateSubcommand::Node(c) => c.run(&mut api_builder, options)
+            CreateSubcommand::Node(c) => c.run(&mut api_builder, options),
         }
     }
 }

@@ -5,7 +5,7 @@ use ockam_node::tokio::sync::RwLockReadGuard;
 use crate::nodes::{NodeManagerWorker, NodeManager, models::secure_channel::SecureChannelList};
 
 impl NodeManagerWorker {
-    // TODO: Should not have a model, instead of Vec<String>,
+    // TODO: Should have a model, instead of Vec<String>,
     // Should be able to use SecureChannelList?
     pub(crate) async fn get_secure_channel_listeners(
         &self,

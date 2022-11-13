@@ -1,10 +1,10 @@
 use std::path::PathBuf;
 
-use clap::{Args, command};
+use clap::{command, Args};
 use colorful::Colorful;
 use ockam_api::nodes::models::base::{CreateNodeRequest, NodeStatus};
-use ockam_multiaddr::MultiAddr;
 use ockam_multiaddr::proto::Node;
+use ockam_multiaddr::MultiAddr;
 use rand::random;
 
 use crate::help;
@@ -71,7 +71,6 @@ pub struct NodeCommand {
 
     #[arg(long, hide = true)]
     pub config: Option<PathBuf>,
-
 }
 
 impl Default for NodeCommand {
@@ -90,10 +89,9 @@ impl Default for NodeCommand {
     }
 }
 
-
 /// Command to create a node resource
 impl NodeCommand {
-    pub fn run (self, api_builder: &mut ApiBuilder, options: CommandGlobalOpts) {
+    pub fn run(self, api_builder: &mut ApiBuilder, options: CommandGlobalOpts) {
         let payload = CreateNodeRequest::new(
             self.node_name,
             self.tcp_listener_address,
@@ -113,15 +111,11 @@ impl NodeCommand {
     }
 }
 
-fn print_response(
-    rpc: Rpc
-) {
-    let resp =  rpc.parse_response::<NodeStatus>();
-    match resp { 
-        Ok(node_status) => {
-            print_node_status(&node_status)
-        },
-        Err(e) => println!("Error creating node: {:?}", e)
+fn print_response(rpc: Rpc) {
+    let resp = rpc.parse_response::<NodeStatus>();
+    match resp {
+        Ok(node_status) => print_node_status(&node_status),
+        Err(e) => println!("Error creating node: {:?}", e),
     }
 }
 
@@ -133,7 +127,9 @@ fn print_node_status(node_status: &NodeStatus) {
 
     println!("  Route To Node:");
     let mut m = MultiAddr::default();
-    if m.push_back(Node::new(node_status.node_name.clone())).is_ok() {
+    if m.push_back(Node::new(node_status.node_name.clone()))
+        .is_ok()
+    {
         println!("    Short: {}", m);
     }
 }

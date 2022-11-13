@@ -1,9 +1,9 @@
 pub mod node;
 
-pub(crate) use node::{NodeCommand, NodesCommand};
+use crate::{help, util::api_builder::ApiBuilder, CommandGlobalOpts};
 use clap::{Args, Subcommand};
+pub(crate) use node::{NodeCommand, NodesCommand};
 use ockam_core::api::Method;
-use crate::{help, CommandGlobalOpts, util::{api_builder::ApiBuilder}};
 
 const HELP_DETAIL: &str = "\
 About:
@@ -40,13 +40,13 @@ pub enum GetSubcommand {
     Node(NodeCommand),
 }
 
-impl GetCommand { 
+impl GetCommand {
     pub fn run(self, options: CommandGlobalOpts) {
         let mut api_builder = ApiBuilder::new(Method::Get);
 
         match self.subcommand {
             GetSubcommand::Nodes(c) => c.run(&mut api_builder, options),
-            GetSubcommand::Node(c) => c.run(&mut api_builder, options)
+            GetSubcommand::Node(c) => c.run(&mut api_builder, options),
         }
     }
 }

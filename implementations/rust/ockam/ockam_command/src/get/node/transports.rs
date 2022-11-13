@@ -1,10 +1,16 @@
 use clap::Args;
-use cli_table::{Cell, Table, Style, print_stdout};
-use ockam_api::nodes::models::transport::{TransportList, TransportStatus, TransportType, TransportMode, GetTransportList};
+use cli_table::{print_stdout, Cell, Style, Table};
+use ockam_api::nodes::models::transport::{
+    GetTransportList, TransportList, TransportMode, TransportStatus, TransportType,
+};
 
-use crate::{util::{api_builder::ApiBuilder, Rpc}, CommandGlobalOpts, help};
+use crate::{
+    help,
+    util::{api_builder::ApiBuilder, Rpc},
+    CommandGlobalOpts,
+};
 
-const HELP_DETAIL: &str ="\
+const HELP_DETAIL: &str = "\
 About:
     Transports
     ------
@@ -30,10 +36,7 @@ pub struct TransportsCommand {
 
 impl TransportsCommand {
     pub fn run(self, api_builder: &mut ApiBuilder, options: CommandGlobalOpts) {
-        let payload = GetTransportList::new(
-            self.tts,
-            self.tms
-        );
+        let payload = GetTransportList::new(self.tts, self.tms);
 
         api_builder
             .to_path("transports".to_string())
@@ -41,36 +44,32 @@ impl TransportsCommand {
     }
 }
 
-fn print_response(
-    rpc: Rpc
-) {
+fn print_response(rpc: Rpc) {
     let resp = rpc.parse_response::<TransportList>();
     match resp {
         Ok(transport_list) => {
             if print_transport_list(&transport_list).is_err() {
                 println!("Error outputing the results to stdout.")
             }
-        },
-        Err(e) => println!("Error getting list of transports: {:?}", e)
+        }
+        Err(e) => println!("Error getting list of transports: {:?}", e),
     }
 }
 
-fn print_transport_list(
-    transport_list: &TransportList
-) -> crate::Result<()> {
+fn print_transport_list(transport_list: &TransportList) -> crate::Result<()> {
     let table = transport_list
         .list
         .iter()
         .fold(
             vec![],
             |mut acc,
-                TransportStatus {
-                    tt,
-                    tm,
-                    payload,
-                    tid,
-                    ..
-                }| {
+             TransportStatus {
+                 tt,
+                 tm,
+                 payload,
+                 tid,
+                 ..
+             }| {
                 let row = vec![tid.cell(), tt.cell(), tm.cell(), payload.cell()];
                 acc.push(row);
                 acc

@@ -1,27 +1,26 @@
 use clap::{Args, Subcommand};
 
-mod transports;
 mod secure_channels;
+mod transports;
 
-use cli_table::{Cell, Table, Style, print_stdout};
+use cli_table::{print_stdout, Cell, Style, Table};
 use colorful::Colorful;
 use ockam::Route;
 
+use ockam_api::nodes::models::base::{GetNodeStatusRequest, NodeDetails, NodeList, NodeStatus};
 use ockam_api::{addr_to_multiaddr, route_to_multiaddr};
-use ockam_api::nodes::models::base::{NodeStatus, NodeDetails, GetNodeStatusRequest, NodeList};
+use ockam_multiaddr::proto::Node;
 use ockam_multiaddr::MultiAddr;
-use ockam_multiaddr::proto::{Node};
 
-
-use crate::util::Rpc;
-use crate::util::api_builder::ApiBuilder;
-use crate::{help, CommandGlobalOpts};
 use crate::node::NodeOpts;
+use crate::util::api_builder::ApiBuilder;
+use crate::util::Rpc;
+use crate::{help, CommandGlobalOpts};
 
 use self::secure_channels::SecureChannelsCommand;
 use self::transports::TransportsCommand;
 
-pub const NODE_HELP_DETAIL: &str ="\
+pub const NODE_HELP_DETAIL: &str = "\
 About:
     An Ockam node is any running application that can communicate with other applications
     using various Ockam protocols like Routing, Secure Channels, Forwarding etc.
@@ -78,57 +77,59 @@ About:
 )]
 pub struct NodesCommand {}
 impl NodesCommand {
-    pub fn run (self, api_builder: &mut ApiBuilder, options: CommandGlobalOpts) {
+    pub fn run(self, api_builder: &mut ApiBuilder, options: CommandGlobalOpts) {
         api_builder
             .to_path("nodes".to_string())
             .exec(options, print_nodes);
     }
 }
 
-fn print_nodes(
-    rpc: Rpc
-) {
+fn print_nodes(rpc: Rpc) {
     let resp = rpc.parse_response::<NodeList>();
     match resp {
         Ok(node_list) => {
             if print_node_list(&node_list).is_err() {
                 println!("Error outputing the results")
             }
-        },
+        }
         Err(_) => println!("Error parsing response of node list."),
     }
 }
 
-fn print_node_list(
-    node_list: &NodeList
-) -> crate::Result<()> {
+fn print_node_list(node_list: &NodeList) -> crate::Result<()> {
     let table = node_list
-    .list
-    .iter()
-    .fold(
-        vec![],
-        |mut acc,
-            NodeStatus {
-                node_name,
-                status,
-                pid,
-                transports,
-                workers,
-                ..
-            } | {
-            let row = vec![node_name.cell(), status.cell(), pid.cell(), transports.cell(), workers.cell()];
-            acc.push(row);
-            acc
-        },
-    )
-    .table()
-    .title(vec![
-        "Node".cell().bold(true),
-        "Status".cell().bold(true),
-        "PID".cell().bold(true),
-        "# of Transports".cell().bold(true),
-        "# of Workers".cell().bold(true),
-    ]);
+        .list
+        .iter()
+        .fold(
+            vec![],
+            |mut acc,
+             NodeStatus {
+                 node_name,
+                 status,
+                 pid,
+                 transports,
+                 workers,
+                 ..
+             }| {
+                let row = vec![
+                    node_name.cell(),
+                    status.cell(),
+                    pid.cell(),
+                    transports.cell(),
+                    workers.cell(),
+                ];
+                acc.push(row);
+                acc
+            },
+        )
+        .table()
+        .title(vec![
+            "Node".cell().bold(true),
+            "Status".cell().bold(true),
+            "PID".cell().bold(true),
+            "# of Transports".cell().bold(true),
+            "# of Workers".cell().bold(true),
+        ]);
     print_stdout(table)?;
 
     Ok(())
@@ -139,7 +140,7 @@ fn print_node_list(
 #[command(
     after_long_help = help::template(NODE_HELP_DETAIL)
 )]
-pub struct NodeCommand { 
+pub struct NodeCommand {
     #[command(flatten)]
     node_opts: NodeOpts,
 
@@ -147,7 +148,7 @@ pub struct NodeCommand {
     detailed: Option<bool>,
 
     #[command(subcommand)]
-    subcommand: Option<NodeSubcommand>
+    subcommand: Option<NodeSubcommand>,
 }
 
 #[derive(Clone, Debug, Subcommand)]
@@ -164,11 +165,9 @@ impl NodeCommand {
             .for_node(self.node_opts.api_node);
 
         match self.subcommand {
-            Some(subcommand) => {
-                match subcommand {
-                    NodeSubcommand::Transports(c) => c.run(api_builder, options),
-                    NodeSubcommand::SecureChannels(c) => c.run(api_builder, options),
-                }
+            Some(subcommand) => match subcommand {
+                NodeSubcommand::Transports(c) => c.run(api_builder, options),
+                NodeSubcommand::SecureChannels(c) => c.run(api_builder, options),
             },
             None => {
                 // Build for any specifics within this command
@@ -179,14 +178,12 @@ impl NodeCommand {
     }
 }
 
-fn print_response(
-    rpc: Rpc
-) {
+fn print_response(rpc: Rpc) {
     let resp = rpc.parse_response::<NodeStatus>();
     match resp {
         Ok(node_status) => {
             print_node_status(&node_status);
-        },
+        }
         Err(_) => println!("Error parsing response of node."),
     }
 }
@@ -199,7 +196,9 @@ fn print_node_status(node_status: &NodeStatus) {
 
     println!("  Route To Node:");
     let mut m = MultiAddr::default();
-    if m.push_back(Node::new(node_status.node_name.clone())).is_ok() {
+    if m.push_back(Node::new(node_status.node_name.clone()))
+        .is_ok()
+    {
         println!("    Short: {}", m);
     }
 
@@ -212,12 +211,15 @@ fn print_node_status(node_status: &NodeStatus) {
 
     match &node_status.details {
         Some(node_details) => print_node_details(&node_details),
-        None => ()
+        None => (),
     }
 }
 
 fn print_node_details(node_details: &NodeDetails) {
-    println!("  Identity: {}", String::from(node_details.short_identity.identity_id.clone()));
+    println!(
+        "  Identity: {}",
+        String::from(node_details.short_identity.identity_id.clone())
+    );
 
     println!("  Transports:");
     for e in &node_details.transport_list.list {

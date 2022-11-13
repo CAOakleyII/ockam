@@ -1,11 +1,21 @@
-use std::{net::{SocketAddr, IpAddr}, str::FromStr};
+use std::{
+    net::{IpAddr, SocketAddr},
+    str::FromStr,
+};
 
-use clap::{Args};
 use anyhow::{anyhow, Context as _, Result};
-use ockam::{Context, TcpTransport, AsyncTryClone};
+use clap::Args;
+use ockam::{AsyncTryClone, Context, TcpTransport};
 use ockam_api::nodes::{overseer::Overseer, OVERSEER_ADDR};
 
-use crate::{help, CommandGlobalOpts, util::{node_rpc, find_available_port, exitcode, bind_to_port_check, startup, embedded_node_that_is_not_stopped}};
+use crate::{
+    help,
+    util::{
+        bind_to_port_check, embedded_node_that_is_not_stopped, exitcode, find_available_port,
+        node_rpc, startup,
+    },
+    CommandGlobalOpts,
+};
 // ! Should change to be configurable and have a default option
 pub const OVERSEER_NODE_NAME: &str = "overseer";
 
@@ -27,8 +37,7 @@ Examples:
     arg_required_else_help = false,
     after_long_help = help::template(HELP_DETAIL)
 )]
-pub struct InitCommand { 
-
+pub struct InitCommand {
     /// TCP listener address
     #[arg(
         display_order = 900,
@@ -48,19 +57,19 @@ impl Default for InitCommand {
     fn default() -> Self {
         Self {
             tcp_listener_address: "127.0.0.1:0".to_string(),
-            init_in_current_process: false
+            init_in_current_process: false,
         }
     }
 }
 
-impl InitCommand { 
+impl InitCommand {
     pub fn run(self, options: CommandGlobalOpts) {
         if self.init_in_current_process {
             if let Err(e) = create_foreground_node_for_overseer(&options, &self) {
                 std::process::exit(e.code());
             }
         } else {
-            // create a background process and re-run this command in that process 
+            // create a background process and re-run this command in that process
             // but with the option `init_in_current_process` flipped to true.
             node_rpc(run_impl, (options, self))
         }
@@ -136,7 +145,10 @@ async fn spawn_overseer_node(
     Ok(())
 }
 
-fn create_foreground_node_for_overseer(opts: &CommandGlobalOpts, cmd: &InitCommand) -> crate::Result<()> {
+fn create_foreground_node_for_overseer(
+    opts: &CommandGlobalOpts,
+    cmd: &InitCommand,
+) -> crate::Result<()> {
     let verbose = opts.global_args.verbose;
     let node_name = OVERSEER_NODE_NAME;
     let cfg = &opts.config;
@@ -154,7 +166,7 @@ fn create_foreground_node_for_overseer(opts: &CommandGlobalOpts, cmd: &InitComma
     }
 
     embedded_node_that_is_not_stopped(run_foreground_overseer_node, (opts.clone(), cmd, addr))?;
-    return Ok(())
+    return Ok(());
 }
 
 async fn run_foreground_overseer_node(

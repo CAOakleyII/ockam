@@ -1,14 +1,21 @@
 use std::borrow::Cow;
 
 use clap::Args;
-use cli_table::{Table, Cell, Style, print_stdout};
+use cli_table::{print_stdout, Cell, Style, Table};
 use ockam::route;
 
-use ockam_api::{nodes::models::secure_channel::{SecureChannelList, ShowSecureChannelResponse}, route_to_multiaddr};
+use ockam_api::{
+    nodes::models::secure_channel::{SecureChannelList, ShowSecureChannelResponse},
+    route_to_multiaddr,
+};
 
-use crate::{CommandGlobalOpts, util::{api_builder::ApiBuilder, Rpc}, help};
+use crate::{
+    help,
+    util::{api_builder::ApiBuilder, Rpc},
+    CommandGlobalOpts,
+};
 
-const HELP_DETAIL: &str ="\
+const HELP_DETAIL: &str = "\
 About:
     Secure Channels
     ------
@@ -24,7 +31,7 @@ About:
 #[command(
     after_long_help = help::template(HELP_DETAIL)
 )]
-pub struct SecureChannelsCommand { }
+pub struct SecureChannelsCommand {}
 
 impl SecureChannelsCommand {
     pub fn run(self, api_builder: &mut ApiBuilder, options: CommandGlobalOpts) {
@@ -34,54 +41,46 @@ impl SecureChannelsCommand {
     }
 }
 
-fn print_response(
-    rpc: Rpc
-) {
+fn print_response(rpc: Rpc) {
     let resp = rpc.parse_response::<SecureChannelList>();
     match resp {
         Ok(secure_channel_list) => {
             if print_secure_channel_list(&secure_channel_list).is_err() {
                 println!("Error outputing the results to stdout")
             }
-        }, 
-        Err(_) => println!("Error parsing the list of secure channels.")
+        }
+        Err(_) => println!("Error parsing the list of secure channels."),
     }
 }
 
-fn print_secure_channel_list(
-    secure_channel_list: &SecureChannelList
-) -> crate::Result<()> {
+fn print_secure_channel_list(secure_channel_list: &SecureChannelList) -> crate::Result<()> {
     let table = secure_channel_list
         .list
         .iter()
         .fold(
             vec![],
             |mut acc,
-                ShowSecureChannelResponse {
-                    channel,
-                    route,
-                    from,
-                    ..
-                }| {
+             ShowSecureChannelResponse {
+                 channel,
+                 route,
+                 from,
+                 ..
+             }| {
                 // node name = from
                 let to = match route {
-                    Some(r) => {
-                        match parse_secure_channel_route(r) {
-                            Ok(parsed_route) => parsed_route,
-                            Err(_) => "Error Retrieving".to_string()
-                        }
+                    Some(r) => match parse_secure_channel_route(r) {
+                        Ok(parsed_route) => parsed_route,
+                        Err(_) => "Error Retrieving".to_string(),
                     },
-                    None => "Unknown!".to_string()
+                    None => "Unknown!".to_string(),
                 };
 
                 let at = match channel {
-                    Some(c) => {
-                        match parse_channel_address(c.to_string()) {
-                            Ok(parsed_channel) => parsed_channel,
-                            Err(_) => "Error Retrieving".to_string()
-                        }
+                    Some(c) => match parse_channel_address(c.to_string()) {
+                        Ok(parsed_channel) => parsed_channel,
+                        Err(_) => "Error Retrieving".to_string(),
                     },
-                    None => "Unknown!".to_string()
+                    None => "Unknown!".to_string(),
                 };
 
                 let row = vec![from.cell(), to.cell(), at.cell()];
@@ -109,10 +108,10 @@ fn parse_secure_channel_route(r: &Cow<str>) -> Result<String, String> {
 
     let r1 = &route![*parts.first().unwrap()];
     let r2 = &route![*parts.get(1).unwrap()];
-    let ma1 = route_to_multiaddr(r1)
-        .ok_or(format!("Failed to convert route {} to multi-address", r1))?;
-    let ma2 = route_to_multiaddr(r2)
-        .ok_or(format!("Failed to convert route {} to multi-address", r2))?;
+    let ma1 =
+        route_to_multiaddr(r1).ok_or(format!("Failed to convert route {} to multi-address", r1))?;
+    let ma2 =
+        route_to_multiaddr(r2).ok_or(format!("Failed to convert route {} to multi-address", r2))?;
 
     Ok(format!("{}{}", ma1, ma2))
 }

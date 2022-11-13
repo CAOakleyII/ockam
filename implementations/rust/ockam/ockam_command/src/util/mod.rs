@@ -63,7 +63,12 @@ impl<'a> RpcBuilder<'a> {
         }
     }
 
-    pub fn new_to(ctx: &'a Context, opts: &'a CommandGlobalOpts, node_name: &str, to: Route) -> Self {
+    pub fn new_to(
+        ctx: &'a Context,
+        opts: &'a CommandGlobalOpts,
+        node_name: &str,
+        to: Route,
+    ) -> Self {
         RpcBuilder {
             ctx,
             opts,
