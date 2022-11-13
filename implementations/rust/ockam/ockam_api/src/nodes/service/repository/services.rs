@@ -4,7 +4,7 @@ use ockam_node::tokio::sync::RwLockReadGuard;
 use crate::nodes::{NodeManagerWorker, NodeManager, models::services::{ServiceList, ServiceStatus}};
 
 impl NodeManagerWorker {
-    pub(crate) async fn build_service_list<'a>(
+    pub(crate) async fn retrieve_service_list<'a>(
         &self,
         node_manager: &'a RwLockReadGuard<'_, NodeManager>,
         _ctx: &mut Context

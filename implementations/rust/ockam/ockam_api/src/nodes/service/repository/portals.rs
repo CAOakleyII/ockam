@@ -3,7 +3,7 @@ use ockam_node::tokio::sync::RwLockReadGuard;
 use crate::nodes::{NodeManagerWorker, NodeManager, models::portal::{InletList, InletStatus, OutletList, OutletStatus}};
 
 impl NodeManagerWorker {
-    pub(crate) async fn build_inlets_list<'a>(
+    pub(crate) async fn retrieve_inlets_list<'a>(
         &self,
         node_manager: &'a RwLockReadGuard<'_, NodeManager>,
         _ctx: &mut Context
@@ -25,7 +25,7 @@ impl NodeManagerWorker {
         ))
     }
 
-    pub(crate) async fn build_outlets_list<'a>(
+    pub(crate) async fn retrieve_outlets_list<'a>(
         &self,
         node_manager: &'a RwLockReadGuard<'_, NodeManager>,
         _ctx: &mut Context

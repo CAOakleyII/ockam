@@ -14,7 +14,7 @@ impl NodeManagerWorker {
 
         let response =
             Response::ok(req.id()).body(
-                self.build_identity_response(&node_manager, ctx).await?
+                self.retrieve_identity_response(&node_manager, ctx).await?
             );
         Ok(response)
     }

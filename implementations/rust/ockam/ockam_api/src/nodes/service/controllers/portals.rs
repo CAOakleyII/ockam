@@ -12,7 +12,7 @@ impl NodeManagerWorker {
         ctx: &mut Context
     ) -> Result<ResponseBuilder<InletList<'a>>, ockam_core::Error> {
         Ok(Response::ok(req.id()).body(
-            self.build_inlets_list(node_manager, ctx).await?
+            self.retrieve_inlets_list(node_manager, ctx).await?
         ))
     }
 
@@ -23,7 +23,7 @@ impl NodeManagerWorker {
         ctx: &mut Context
     ) -> Result<ResponseBuilder<OutletList<'a>>, ockam_core::Error> {
         Ok(Response::ok(req.id()).body(
-            self.build_outlets_list(node_manager, ctx).await?
+            self.retrieve_outlets_list(node_manager, ctx).await?
         ))
     }
 }

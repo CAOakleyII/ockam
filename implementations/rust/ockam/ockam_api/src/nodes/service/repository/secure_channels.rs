@@ -6,7 +6,7 @@ use ockam_node::tokio::sync::RwLockReadGuard;
 use crate::nodes::{NodeManagerWorker, NodeManager, models::secure_channel::{SecureChannelList, ShowSecureChannelResponse}};
 
 impl NodeManagerWorker { 
-    pub(crate) async fn build_secure_channel_listeners<'a>(
+    pub(crate) async fn retrieve_secure_channel_listeners<'a>(
         &self,
         node_manager: &'a RwLockReadGuard<'_, NodeManager>,
         _ctx: &mut Context
@@ -21,7 +21,7 @@ impl NodeManagerWorker {
         )
     }
 
-    pub(crate) async fn build_secure_channels_list<'a>(
+    pub(crate) async fn retrieve_secure_channels_list<'a>(
         &self,
         node_manager: &'a RwLockReadGuard<'_, NodeManager>,
         _ctx: &mut Context

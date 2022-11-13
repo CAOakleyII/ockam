@@ -20,12 +20,12 @@ impl NodeManagerWorker {
         let node_details = if details {
             Some(NodeDetails::new(
                 "Running",
-                self.build_short_identity_response(node_manager, ctx).await?,
-                self.build_service_list(node_manager, ctx).await?,
-                self.build_transport_list(node_manager, ctx, vec![TransportType::Tcp], vec![TransportMode::Listen]).await?,
-                self.build_secure_channel_listeners(node_manager, ctx).await?,
-                self.build_inlets_list(node_manager, ctx).await?,
-                self.build_outlets_list(node_manager, ctx).await?,
+                self.retrieve_short_identity_response(node_manager, ctx).await?,
+                self.retrieve_service_list(node_manager, ctx).await?,
+                self.retrieve_transport_list(node_manager, ctx, vec![TransportType::Tcp], vec![TransportMode::Listen]).await?,
+                self.retrieve_secure_channel_listeners(node_manager, ctx).await?,
+                self.retrieve_inlets_list(node_manager, ctx).await?,
+                self.retrieve_outlets_list(node_manager, ctx).await?,
             ))
         } else {
             None

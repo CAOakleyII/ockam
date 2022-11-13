@@ -11,18 +11,18 @@ use crate::{nodes::{NodeManagerWorker, NodeManager, models::identity::{ShortIden
 impl NodeManagerWorker {
 
     /// Retrieves the identity model, with both short and long when possible.
-    pub(crate) async fn build_identity_response<'a>(
+    pub(crate) async fn retrieve_identity_response<'a>(
         &self,
         node_manager: &'a RwLockReadGuard<'_, NodeManager>,
         ctx: &mut Context
     ) -> Result<IdentityResponse<'a>, ockam_core::Error> {
         // TODO: Can have options to only retrieve certain identity responses (LONG  | SHORT)
-        let short = match self.build_short_identity_response(node_manager, ctx).await {
+        let short = match self.retrieve_short_identity_response(node_manager, ctx).await {
             Ok(l) => Some(l),
             Err(_) => None,
         };
 
-        let long  = match self.build_long_identity_response(node_manager, ctx).await {
+        let long  = match self.retrieve_long_identity_response(node_manager, ctx).await {
             Ok(l) => Some(l),
             Err(_) => None,
         };
@@ -34,7 +34,7 @@ impl NodeManagerWorker {
     }
 
     /// Retrieves the short identity
-    pub(crate) async fn build_short_identity_response<'a>(
+    pub(crate) async fn retrieve_short_identity_response<'a>(
         &self,
         node_manager: &'a RwLockReadGuard<'_, NodeManager>,
         _ctx: &mut Context
@@ -46,7 +46,7 @@ impl NodeManagerWorker {
     }
 
     /// Retrieves the long identity
-    pub(crate) async fn build_long_identity_response<'a>(
+    pub(crate) async fn retrieve_long_identity_response<'a>(
         &self,
         node_manager: &'a RwLockReadGuard<'_, NodeManager>,
         _ctx: &mut Context

@@ -12,7 +12,7 @@ impl NodeManagerWorker {
         ctx: &mut Context
     ) -> Result<ResponseBuilder<ServiceList<'a>>, ockam_core::Error> {
         Ok(Response::ok(req.id()).body(
-            self.build_service_list(node_manager, ctx).await?
+            self.retrieve_service_list(node_manager, ctx).await?
         ))
     }
 }

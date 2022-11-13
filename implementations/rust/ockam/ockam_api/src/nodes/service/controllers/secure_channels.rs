@@ -14,7 +14,7 @@ impl NodeManagerWorker {
         ctx: &mut Context
     ) -> Result<ResponseBuilder<Vec<String>>, ockam_core::Error> {
         Ok(Response::ok(req.id()).body(
-            self.build_secure_channel_listeners(node_manager, ctx).await?
+            self.retrieve_secure_channel_listeners(node_manager, ctx).await?
         ))
     }
 
@@ -25,7 +25,7 @@ impl NodeManagerWorker {
         ctx: &mut Context
     ) -> Result<ResponseBuilder<SecureChannelList<'a>>, ockam_core::Error> {
         Ok(Response::ok(req.id()).body(
-            self.build_secure_channels_list(
+            self.retrieve_secure_channels_list(
                 node_manager,
                 ctx
             ).await?

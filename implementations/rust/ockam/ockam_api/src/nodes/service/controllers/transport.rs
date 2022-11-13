@@ -28,7 +28,7 @@ impl NodeManagerWorker {
         };
     
         Ok(Response::ok(req.id()).body(
-            self.build_transport_list(node_manager, ctx, tts_vec, tms_vec).await?
+            self.retrieve_transport_list(node_manager, ctx, tts_vec, tms_vec).await?
         ))
     }
 }
